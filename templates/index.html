@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS AI - Next Gen Intelligent Infrastructure</title>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --accent-cyan: #06b6d4;
+            --accent-violet: #8b5cf6;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* 3D Canvas Background */
+        #webgl-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--accent-cyan), var(--accent-violet));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+            color: #fff;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6);
+        }
+
+        /* Layout Sections */
+        section {
+            min-height: 100vh;
+            padding: 120px 8% 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Hero Section */
+        .hero {
+            align-items: flex-start;
+        }
+
+        .badge {
+            padding: 6px 16px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 20px;
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            max-width: 800px;
+            margin-bottom: 25px;
+            font-weight: 800;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(90deg, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* Feature Cards Grid */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 35px;
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            margin: 15px 0;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Stats Section */
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 50px 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .stat-item h2 {
+            font-size: 3.5rem;
+            color: var(--accent-cyan);
+            margin-bottom: 10px;
+        }
+
+        .stat-item p {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        /* Section Headings */
+        .section-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 50px;
+        }
+
+        /* Interactive Terminal / Code Block */
+        .code-window {
+            background: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #a7f3d0;
+            max-width: 800px;
+            margin: 30px auto 0;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .window-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        /* Scroll Animations Utility */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 40px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <div id="webgl-container"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">NEXUS AI</div>
+        <ul class="nav-links">
+            <li><a href="#hero">Home</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#stats">Metrics</a></li>
+            <li><a href="#demo">Console</a></li>
+        </ul>
+        <button class="btn-primary">Launch App</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="badge">v3.0 Engine Released</div>
+        <h1>Autonomous Neural Networks for <span>Next-Gen Enterprise</span></h1>
+        <p>Deploy scalable AI models and real-time data pipelines in seconds with zero configuration overhead.</p>
+        <div style="display: flex; gap: 20px;">
+            <button class="btn-primary">Get Started Free</button>
+            <button class="btn-primary" style="background: transparent; border: 1px solid var(--border-color);">Documentation</button>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <h2 class="section-title reveal">Engineered for Scale</h2>
+        <p class="section-subtitle reveal">Built from the ground up to support massive real-time data streaming and complex neural computations.</p>
+        
+        <div class="grid-3">
+            <div class="card reveal">
+                <h3>Sub-Millisecond Latency</h3>
+                <p>Global edge network guarantees instant model execution close to your end users.</p>
+            </div>
+            <div class="card reveal">
+                <h3>Auto-Scaling Pipeline</h3>
+                <p>Automatically adjust compute nodes according to incoming traffic demands.</p>
+            </div>
+            <div class="card reveal">
+                <h3>End-to-End Encryption</h3>
+                <p>Zero-trust architecture ensuring all data remains encrypted at rest and in transit.</p>
+            </div>
+            <div class="card reveal">
+                <h3>Multi-Cloud Support</h3>
+                <p>Deploy seamlessly across AWS, GCP, Azure, or private cloud environments.</p>
+            </div>
+            <div class="card reveal">
+                <h3>Automated ML Ops</h3>
+                <p>Continuous integration and delivery pipelines customized specifically for machine learning models.</p>
+            </div>
+            <div class="card reveal">
+                <h3>Real-time Analytics</h3>
+                <p>Deep insight dashboards providing live metrics on model performance and accuracy.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="stats">
+        <div class="stats-container reveal">
+            <div class="stat-item">
+                <h2 class="counter" data-target="99.99">0</h2>
+                <p>Uptime %</p>
+            </div>
+            <div class="stat-item">
+                <h2 class="counter" data-target="500">0</h2>
+                <p>M+ Daily API Calls</p>
+            </div>
+            <div class="stat-item">
+                <h2 class="counter" data-target="12">0</h2>
+                <p>ms Avg Latency</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Console Section -->
+    <section id="demo">
+        <h2 class="section-title reveal">Developer First API</h2>
+        <p class="section-subtitle reveal">Integrate intelligence into your application with simple, intuitive code structures.</p>
+        
+        <div class="code-window reveal">
+            <div class="window-header">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-yellow"></div>
+                <div class="dot dot-green"></div>
+            </div>
+            <pre><code id="typewriter">// Initializing Nexus Neural Node Engine
+import { NexusNode } from '@nexus/core';
+
+const node = new NexusNode({
+    apiKey: process.env.NEXUS_KEY,
+    cluster: 'us-east-1',
+    autoScale: true
+});
+
+await node.connect();
+console.log('Nexus Node Running Realtime Stream...');</code></pre>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div>&copy; 2026 NEXUS AI Systems Inc. All rights reserved.</div>
+        <div style="display: flex; gap: 20px;">
+            <a href="#" style="color: var(--text-muted); text-decoration: none;">Privacy</a>
+            <a href="#" style="color: var(--text-muted); text-decoration: none;">Terms</a>
+            <a href="#" style="color: var(--text-muted); text-decoration: none;">Status</a>
+        </div>
+    </footer>
+
+    <!-- Comprehensive JavaScript Logic & Animations -->
+    <script>
+        /* ===================================================
+           1. THREE.JS 3D BACKGROUND ENGINE
+           =================================================== */
+        let scene, camera, renderer, particles, torusKnot;
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        function init3D() {
+            const container = document.getElementById('webgl-container');
+
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x030712, 0.0015);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+            camera.position.z = 400;
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Geometry 1: Particle Field
+            const particleCount = 1200;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 2000;
+                positions[i + 1] = (Math.random() - 0.5) * 2000;
+                positions[i + 2] = (Math.random() - 0.5) * 2000;
+
+                colors[i] = 0.02 + Math.random() * 0.2;     // R
+                colors[i + 1] = 0.7 + Math.random() * 0.3;  // G (Cyanish)
+                colors[i + 2] = 0.8 + Math.random() * 0.2;  // B
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 3,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            particles = new THREE.Points(geometry, particleMaterial);
+            scene.add(particles);
+
+            // Geometry 2: 3D Torus Knot Tech Core
+            const knotGeometry = new THREE.TorusKnotGeometry(80, 22, 120, 16);
+            const knotMaterial = new THREE.MeshBasicMaterial({
+                color: 0x8b5cf6,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.25
+            });
+            torusKnot = new THREE.Mesh(knotGeometry, knotMaterial);
+            torusKnot.position.set(200, 0, -100);
+            scene.add(torusKnot);
+
+            // Ambient Light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            // Event Listeners
+            document.addEventListener('mousemove', onDocumentMouseMove);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onDocumentMouseMove(event) {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // 3D Render Loop
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
+
+            if (particles) {
+                particles.rotation.y += 0.0008;
+                particles.rotation.x += 0.0003;
+            }
+
+            if (torusKnot) {
+                torusKnot.rotation.x += 0.005;
+                torusKnot.rotation.y += 0.005;
+                torusKnot.position.x += (mouseX * 0.1 - torusKnot.position.x) * 0.02;
+                torusKnot.position.y += (-mouseY * 0.1 - torusKnot.position.y) * 0.02;
+            }
+
+            camera.position.x += (mouseX * 0.05 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 0.05 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        /* ===================================================
+           2. INTERACTIVE UI ANIMATIONS & SCROLL ENGINE
+           =================================================== */
+
+        // Scroll Reveal Handler
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.reveal');
+            const windowHeight = window.innerHeight;
+
+            reveals.forEach((element) => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+
+        // Stats Counter Animation
+        let animatedStats = false;
+        function animateCounters() {
+            const statsSection = document.getElementById('stats');
+            const rect = statsSection.getBoundingClientRect();
+            
+            if (rect.top < window.innerHeight && !animatedStats) {
+                animatedStats = true;
+                const counters = document.querySelectorAll('.counter');
+                
+                counters.forEach((counter) => {
+                    const target = +counter.getAttribute('data-target');
+                    const isDecimal = target % 1 !== 0;
+                    let current = 0;
+                    const increment = target / 100;
+
+                    const updateCount = () => {
+                        current += increment;
+                        if (current < target) {
+                            counter.innerText = isDecimal ? current.toFixed(2) : Math.ceil(current);
+                            setTimeout(updateCount, 20);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCount();
+                });
+            }
+        }
+
+        // Card Interactive 3D Tilt Effect
+        function initCardTilt() {
+            const cards = document.querySelectorAll('.card');
+
+            cards.forEach((card) => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+
+                    const rotateX = (y - centerY) / 10;
+                    const rotateY = (centerX - x) / 10;
+
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)`;
+                });
+            });
+        }
+
+        // Smooth Navigation Scroll
+        function initSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if(target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+
+        // Initialize All Functions
+        window.addEventListener('DOMContentLoaded', () => {
+            init3D();
+            animate3D();
+            initCardTilt();
+            initSmoothScroll();
+            revealOnScroll();
+
+            window.addEventListener('scroll', () => {
+                revealOnScroll();
+                animateCounters();
+            });
+        });
+    </script>
+</body>
+</html>
